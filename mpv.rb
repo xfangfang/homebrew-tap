@@ -11,8 +11,8 @@ class Mpv < Formula
   depends_on "python@3.10" => :build
   depends_on xcode: :build
 
-  depends_on "deus0ww/tap/ffmpeg"
-  depends_on "deus0ww/tap/libass"
+  depends_on "ffmpeg"
+  depends_on "libass"
   depends_on "jpeg"
   depends_on "libarchive"
   depends_on "little-cms2"
@@ -23,7 +23,7 @@ class Mpv < Formula
   depends_on "vapoursynth"
   depends_on "zimg"
 
-  depends_on "deus0ww/tap/yt-dlp" => :recommended
+  depends_on "yt-dlp" => :recommended
   depends_on "subliminal" => :recommended
 
   depends_on "jack" => :optional
