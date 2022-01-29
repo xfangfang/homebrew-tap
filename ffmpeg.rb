@@ -1,44 +1,33 @@
 class Ffmpeg < Formula
   desc "Play, record, convert, and stream audio and video"
   homepage "https://ffmpeg.org/"
-  url "https://ffmpeg.org/releases/ffmpeg-4.4.1.tar.xz"
-  sha256 "eadbad9e9ab30b25f5520fbfde99fae4a92a1ae3c0257a8d68569a4651e30e02"
+  url "https://github.com/xfangfang/FFmpeg/archive/patch/hls_4.4.zip"
+  sha256 "7bfff0c1e2179892f8b735961599daf35e2bffa26ee99dd9a29765a5a157b5f9"
   # None of these parts are used by default, you have to explicitly pass `--enable-gpl`
   # to configure to activate them. In this case, FFmpeg's license changes to GPL v2+.
   license "GPL-2.0-or-later"
-  head "https://github.com/FFmpeg/FFmpeg.git", branch: "master"
-
-  livecheck do
-    url "https://ffmpeg.org/download.html"
-    regex(/href=.*?ffmpeg[._-]v?(\d+(?:\.\d+)+)\.t/i)
-  end
-
-  option "with-librsvg", "Enable SVG files as inputs via librsvg"
-  option "with-libssh", "Enable SFTP protocol via libssh"
-  option "with-openh264", "Enable OpenH264 library"
-  option "with-libvmaf", "Enable libvmaf scoring library"
+  revision 5
+  head "https://github.com/xfangfang/FFmpeg.git", branch: "patch/hls_4.4"
 
   depends_on "nasm" => :build
   depends_on "pkg-config" => :build
-
   depends_on "aom"
-  depends_on "deus0ww/tap/dav1d"
-  depends_on "deus0ww/tap/libass"
-  depends_on "deus0ww/tap/libmysofa"
-  depends_on "fdk-aac"
+  depends_on "dav1d"
   depends_on "fontconfig"
   depends_on "freetype"
   depends_on "frei0r"
+  depends_on "gnutls"
   depends_on "lame"
+  depends_on "libass"
   depends_on "libbluray"
-  depends_on "libbs2b"
+  depends_on "librist"
   depends_on "libsoxr"
   depends_on "libvidstab"
+  depends_on "libvmaf"
   depends_on "libvorbis"
   depends_on "libvpx"
   depends_on "opencore-amr"
   depends_on "openjpeg"
-  depends_on "openssl@1.1"
   depends_on "opus"
   depends_on "rav1e"
   depends_on "rubberband"
@@ -56,63 +45,43 @@ class Ffmpeg < Formula
   depends_on "zeromq"
   depends_on "zimg"
 
-  depends_on "game-music-emu" => :optional
-  depends_on "libcaca" => :optional
-  depends_on "libgsm" => :optional
-  depends_on "libmodplug" => :optional
-  depends_on "librsvg" => :optional
-  depends_on "libssh" => :optional
-  depends_on "libvmaf" => :optional
-  depends_on "openh264" => :optional
-  depends_on "two-lame" => :optional
-
   uses_from_macos "bzip2"
   uses_from_macos "libxml2"
   uses_from_macos "zlib"
 
   on_linux do
     depends_on "libxv"
+    depends_on "gcc" # because rubbernand is compiled with gcc
   end
+
+  fails_with gcc: "5"
 
   def install
     args = %W[
+      --prefix=#{prefix}
+      --enable-shared
+      --enable-pthreads
+      --enable-version3
       --cc=#{ENV.cc}
       --host-cflags=#{ENV.cflags}
       --host-ldflags=#{ENV.ldflags}
-      --prefix=#{prefix}
-
+      --enable-ffplay
+      --enable-gnutls
       --enable-gpl
-      --enable-nonfree
-      --enable-version3
-
-      --enable-opencl
-      --enable-pthreads
-      --enable-shared
-
-      --enable-frei0r
       --enable-libaom
-      --enable-libass
       --enable-libbluray
-      --enable-libbs2b
       --enable-libdav1d
-      --enable-libfdk-aac
-      --enable-libfontconfig
-      --enable-libfreetype
       --enable-libmp3lame
-      --enable-libmysofa
-      --enable-libopencore-amrnb
-      --enable-libopencore-amrwb
-      --enable-libopenjpeg
       --enable-libopus
       --enable-librav1e
+      --enable-librist
       --enable-librubberband
       --enable-libsnappy
-      --enable-libsoxr
-      --enable-libspeex
       --enable-libsrt
       --enable-libtesseract
       --enable-libtheora
       --enable-libvidstab
+      --enable-libvmaf
       --enable-libvorbis
       --enable-libvpx
       --enable-libwebp
@@ -120,15 +89,18 @@ class Ffmpeg < Formula
       --enable-libx265
       --enable-libxml2
       --enable-libxvid
-      --enable-libzimg
-      --enable-libzmq
       --enable-lzma
-      --enable-openssl
-
-      --disable-htmlpages
-      --disable-podpages
-      --disable-txtpages
-
+      --enable-libfontconfig
+      --enable-libfreetype
+      --enable-frei0r
+      --enable-libass
+      --enable-libopencore-amrnb
+      --enable-libopencore-amrwb
+      --enable-libopenjpeg
+      --enable-libspeex
+      --enable-libsoxr
+      --enable-libzmq
+      --enable-libzimg
       --disable-libjack
       --disable-indev=jack
     ]
@@ -140,28 +112,12 @@ class Ffmpeg < Formula
     # Needs corefoundation, coremedia, corevideo
     args << "--enable-videotoolbox" if OS.mac?
 
-    args << "--enable-libcaca" if build.with? "libcaca"
-    args << "--enable-libgme" if build.with? "game-music-emu"
-    args << "--enable-libgsm" if build.with? "libgsm"
-    args << "--enable-libmodplug" if build.with? "libmodplug"
-    args << "--enable-libopenh264" if build.with? "openh264"
-    args << "--enable-librsvg" if build.with? "librsvg"
-    args << "--enable-libssh" if build.with? "libssh"
-    args << "--enable-libtwolame" if build.with? "two-lame"
-    args << "--enable-libvmaf" if build.with? "libvmaf"
-
-    args << "--enable-hardcoded-tables"
-    args << "--enable-lto"
-    args << "--optflags=-Ofast"
-
-    opts  = Hardware::CPU.arm? ? "-mcpu=native " : "-march=native -mtune=native "
-    opts += "-funroll-loops -fomit-frame-pointer "
-    opts += "-ffunction-sections -fdata-sections -fstrict-vtable-pointers "
-    opts += "-fforce-emit-vtables " if MacOS.version >= :mojave
-    args << "--extra-cflags="    + opts
-    args << "--extra-cxxflags="  + opts + " -fwhole-program-vtables"
-    args << "--extra-objcflags=" + opts
-    args << "--extra-ldflags="   + opts + " -fwhole-program-vtables"
+    # Replace hardcoded default VMAF model path
+    %w[doc/filters.texi libavfilter/vf_libvmaf.c].each do |f|
+      inreplace f, "/usr/local/share/model", HOMEBREW_PREFIX/"share/libvmaf/model"
+      # Since libvmaf v2.0.0, `.pkl` model files have been deprecated in favor of `.json` model files.
+      inreplace f, "vmaf_v0.6.1.pkl", "vmaf_v0.6.1.json"
+    end
 
     system "./configure", *args
     system "make", "install"
